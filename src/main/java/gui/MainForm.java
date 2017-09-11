@@ -1,6 +1,8 @@
 package gui;
 
 import javax.swing.UIManager;
+import javax.xml.ws.Endpoint;
+import servisi.MaterijalServis;
 
 /**
  *
@@ -70,6 +72,13 @@ public class MainForm extends javax.swing.JFrame {
 				new MainForm().setVisible(true);
 			}
 		});
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
+			}
+		}).start();
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

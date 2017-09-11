@@ -1,7 +1,9 @@
 package servisi;
 
+import java.util.List;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
+import modeli.Materijal;
 
 /**
  *
@@ -12,5 +14,8 @@ import javax.jws.WebService;
 public interface IMaterijalServis {
 	
 	@WebMethod
-	public String test();
+	public List<Materijal> preuzmiMaterijale(int razred, int lekcija);
+	
+	@WebMethod
+	public Materijal preuzmiMaterijal(int id);
 }
