@@ -1,8 +1,21 @@
 package gui;
 
+import dao.MaterijalDAO;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
 import javax.xml.ws.Endpoint;
+import modeli.Materijal;
 import servisi.MaterijalServis;
+import utils.Konverter;
 
 /**
  *
@@ -10,12 +23,57 @@ import servisi.MaterijalServis;
  */
 
 public class MainForm extends javax.swing.JFrame {
-
+	
+	private MaterijalDAO materijalDAO;
+	private List<Materijal> materijali;
+	private DefaultTableModel modelMaterijali;
+	
 	/**
 	 * Creates new form MainForm
 	 */
 	public MainForm() {
+		materijalDAO = new MaterijalDAO();
+		initModels();
 		initComponents();
+		osvezi();
+	}
+	
+	private void osvezi() {
+		int razred = (int)spinnerRazred.getValue();
+		int lekcija = (int)spinnerLekcija.getValue();
+		
+		materijali = materijalDAO.preuzmi(razred, lekcija);
+		
+		while(modelMaterijali.getRowCount() > 0) {
+			modelMaterijali.removeRow(0);
+		}
+		
+		for(Materijal materijal : materijali) {
+			modelMaterijali.addRow(new Object[] {
+				materijal.getId(),
+				materijal.getRazred(),
+				materijal.getLekcija()
+			});
+		}
+		
+		lblSlika.setIcon(new ImageIcon());
+	}
+	
+	private void initModels() {
+		modelMaterijali = new DefaultTableModel(
+			new Object[][] {},
+			new String[] {
+				"ИД",
+				"Разред",
+				"Лекција"
+			}
+		) {
+			@Override
+			public boolean isCellEditable(int i, int i1) {
+				return false;
+			}
+			
+		};
 	}
 
 	/**
@@ -27,21 +85,217 @@ public class MainForm extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        tpGlavni = new javax.swing.JTabbedPane();
+        panelServis = new javax.swing.JPanel();
+        panelMaterijali = new javax.swing.JPanel();
+        lblRazred = new javax.swing.JLabel();
+        spinnerRazred = new javax.swing.JSpinner();
+        lblLekcija = new javax.swing.JLabel();
+        spinnerLekcija = new javax.swing.JSpinner();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tblMaterijali = new javax.swing.JTable();
+        lblSlika = new javax.swing.JLabel();
+        btnNoviRed = new javax.swing.JButton();
+        btnUcitajSliku = new javax.swing.JButton();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        menuServis = new javax.swing.JMenu();
+        menuServisStart = new javax.swing.JMenuItem();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("ЧАС");
+
+        javax.swing.GroupLayout panelServisLayout = new javax.swing.GroupLayout(panelServis);
+        panelServis.setLayout(panelServisLayout);
+        panelServisLayout.setHorizontalGroup(
+            panelServisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 633, Short.MAX_VALUE)
+        );
+        panelServisLayout.setVerticalGroup(
+            panelServisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 464, Short.MAX_VALUE)
+        );
+
+        tpGlavni.addTab("Сервис", panelServis);
+
+        lblRazred.setText("Разред:");
+
+        spinnerRazred.setModel(new javax.swing.SpinnerNumberModel(5, 5, 8, 1));
+        spinnerRazred.setToolTipText("");
+        spinnerRazred.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spinnerRazredStateChanged(evt);
+            }
+        });
+
+        lblLekcija.setText("Лекција:");
+
+        spinnerLekcija.setModel(new javax.swing.SpinnerNumberModel(1, 1, 99, 1));
+        spinnerLekcija.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spinnerLekcijaStateChanged(evt);
+            }
+        });
+
+        tblMaterijali.setModel(modelMaterijali);
+        tblMaterijali.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                tblMaterijaliMousePressed(evt);
+            }
+        });
+        jScrollPane1.setViewportView(tblMaterijali);
+
+        lblSlika.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblSlikaMouseClicked(evt);
+            }
+        });
+
+        btnNoviRed.setText("Додај");
+        btnNoviRed.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNoviRedActionPerformed(evt);
+            }
+        });
+
+        btnUcitajSliku.setText("Учитај слику ...");
+
+        javax.swing.GroupLayout panelMaterijaliLayout = new javax.swing.GroupLayout(panelMaterijali);
+        panelMaterijali.setLayout(panelMaterijaliLayout);
+        panelMaterijaliLayout.setHorizontalGroup(
+            panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                        .addComponent(lblRazred)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(spinnerRazred, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(lblLekcija)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(spinnerLekcija, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 407, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblSlika, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                                .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnUcitajSliku)
+                                    .addComponent(btnNoviRed))
+                                .addGap(0, 76, Short.MAX_VALUE))))))
+        );
+        panelMaterijaliLayout.setVerticalGroup(
+            panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblRazred)
+                    .addComponent(spinnerRazred, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblLekcija)
+                    .addComponent(spinnerLekcija, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
+                    .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                        .addComponent(lblSlika, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnUcitajSliku)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnNoviRed)))
+                .addContainerGap())
+        );
+
+        tpGlavni.addTab("Материјали за час", panelMaterijali);
+
+        menuServis.setText("Сервис");
+
+        menuServisStart.setText("Старт");
+        menuServisStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuServisStartActionPerformed(evt);
+            }
+        });
+        menuServis.add(menuServisStart);
+
+        jMenuBar1.add(menuServis);
+
+        setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tpGlavni)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tpGlavni)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void menuServisStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuServisStartActionPerformed
+        new Thread(new Runnable() {
+			@Override
+			public void run() {
+				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
+			}
+		}).start();
+    }//GEN-LAST:event_menuServisStartActionPerformed
+
+    private void spinnerRazredStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRazredStateChanged
+        osvezi();
+    }//GEN-LAST:event_spinnerRazredStateChanged
+
+    private void spinnerLekcijaStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerLekcijaStateChanged
+        osvezi();
+    }//GEN-LAST:event_spinnerLekcijaStateChanged
+
+    private void btnNoviRedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNoviRedActionPerformed
+        Materijal materijal = new Materijal();
+		materijal.setRazred((int)spinnerRazred.getValue());
+		materijal.setLekcija((int)spinnerLekcija.getValue());
+		materijalDAO.dodaj(materijal);
+		osvezi();
+    }//GEN-LAST:event_btnNoviRedActionPerformed
+
+    private void tblMaterijaliMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMaterijaliMousePressed
+        int row = tblMaterijali.rowAtPoint(evt.getPoint());
+		Materijal materijal = materijali.get(row);
+		lblSlika.setIcon(new ImageIcon());
+		try {
+			materijal.ucitajSliku();
+			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
+			Image sSlika = slika.getScaledInstance(lblSlika.getWidth(), lblSlika.getHeight(), Image.SCALE_SMOOTH);
+			lblSlika.setIcon(new ImageIcon(sSlika));
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+    }//GEN-LAST:event_tblMaterijaliMousePressed
+
+    private void lblSlikaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblSlikaMouseClicked
+        JFrame frmSlika = new JFrame();
+		int row = tblMaterijali.getSelectedRow();
+		Materijal materijal = materijali.get(row);
+		frmSlika.setTitle(String.valueOf(materijal.getId()));
+		try {
+			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
+			frmSlika.add(new JLabel(new ImageIcon(slika)));
+			frmSlika.setVisible(true);
+			frmSlika.pack();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+    }//GEN-LAST:event_lblSlikaMouseClicked
 
 	/**
 	 * @param args the command line arguments
@@ -72,15 +326,23 @@ public class MainForm extends javax.swing.JFrame {
 				new MainForm().setVisible(true);
 			}
 		});
-		
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
-			}
-		}).start();
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnNoviRed;
+    private javax.swing.JButton btnUcitajSliku;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblLekcija;
+    private javax.swing.JLabel lblRazred;
+    private javax.swing.JLabel lblSlika;
+    private javax.swing.JMenu menuServis;
+    private javax.swing.JMenuItem menuServisStart;
+    private javax.swing.JPanel panelMaterijali;
+    private javax.swing.JPanel panelServis;
+    private javax.swing.JSpinner spinnerLekcija;
+    private javax.swing.JSpinner spinnerRazred;
+    private javax.swing.JTable tblMaterijali;
+    private javax.swing.JTabbedPane tpGlavni;
     // End of variables declaration//GEN-END:variables
 }
