@@ -22,7 +22,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.xml.ws.Endpoint;
 import modeli.Materijal;
 import org.eclipse.persistence.tools.file.FileUtil;
-import servisi.MaterijalServis;
+import servisi.CasServis;
 import utils.Konverter;
 
 /**
@@ -329,7 +329,7 @@ public class MainForm extends javax.swing.JFrame {
         new Thread(new Runnable() {
 			@Override
 			public void run() {
-				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
+				Endpoint.publish("http://0.0.0.0:5001/Cas", new CasServis());
 			}
 		}).start();
     }//GEN-LAST:event_btnPokreniActionPerformed

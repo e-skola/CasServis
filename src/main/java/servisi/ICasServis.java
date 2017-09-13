@@ -11,7 +11,7 @@ import modeli.Materijal;
  */
 
 @WebService
-public interface IMaterijalServis {
+public interface ICasServis {
 	
 	@WebMethod
 	public List<Materijal> preuzmiMaterijale(int razred, int lekcija);
