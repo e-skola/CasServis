@@ -3,17 +3,25 @@ package gui;
 import dao.MaterijalDAO;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.ws.Endpoint;
 import modeli.Materijal;
+import org.eclipse.persistence.tools.file.FileUtil;
 import servisi.MaterijalServis;
 import utils.Konverter;
 
@@ -75,6 +83,18 @@ public class MainForm extends javax.swing.JFrame {
 			
 		};
 	}
+	
+	public void prikaziSliku(Materijal materijal) {
+		lblSlika.setIcon(new ImageIcon());
+		try {
+			materijal.ucitajSliku();
+			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
+			Image sSlika = slika.getScaledInstance(lblSlika.getWidth(), lblSlika.getHeight(), Image.SCALE_SMOOTH);
+			lblSlika.setIcon(new ImageIcon(sSlika));
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 
 	/**
 	 * This method is called from within the constructor to initialize the form.
@@ -87,6 +107,7 @@ public class MainForm extends javax.swing.JFrame {
 
         tpGlavni = new javax.swing.JTabbedPane();
         panelServis = new javax.swing.JPanel();
+        btnPokreni = new javax.swing.JButton();
         panelMaterijali = new javax.swing.JPanel();
         lblRazred = new javax.swing.JLabel();
         spinnerRazred = new javax.swing.JSpinner();
@@ -97,22 +118,33 @@ public class MainForm extends javax.swing.JFrame {
         lblSlika = new javax.swing.JLabel();
         btnNoviRed = new javax.swing.JButton();
         btnUcitajSliku = new javax.swing.JButton();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        menuServis = new javax.swing.JMenu();
-        menuServisStart = new javax.swing.JMenuItem();
+        btnObrisi = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ЧАС");
+
+        btnPokreni.setText("ПОКРЕНИ");
+        btnPokreni.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPokreniActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelServisLayout = new javax.swing.GroupLayout(panelServis);
         panelServis.setLayout(panelServisLayout);
         panelServisLayout.setHorizontalGroup(
             panelServisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 633, Short.MAX_VALUE)
+            .addGroup(panelServisLayout.createSequentialGroup()
+                .addGap(261, 261, 261)
+                .addComponent(btnPokreni)
+                .addContainerGap(274, Short.MAX_VALUE))
         );
         panelServisLayout.setVerticalGroup(
             panelServisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 464, Short.MAX_VALUE)
+            .addGroup(panelServisLayout.createSequentialGroup()
+                .addGap(117, 117, 117)
+                .addComponent(btnPokreni)
+                .addContainerGap(337, Short.MAX_VALUE))
         );
 
         tpGlavni.addTab("Сервис", panelServis);
@@ -158,6 +190,18 @@ public class MainForm extends javax.swing.JFrame {
         });
 
         btnUcitajSliku.setText("Учитај слику ...");
+        btnUcitajSliku.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUcitajSlikuActionPerformed(evt);
+            }
+        });
+
+        btnObrisi.setText("Обриши");
+        btnObrisi.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnObrisiActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelMaterijaliLayout = new javax.swing.GroupLayout(panelMaterijali);
         panelMaterijali.setLayout(panelMaterijaliLayout);
@@ -183,8 +227,11 @@ public class MainForm extends javax.swing.JFrame {
                             .addGroup(panelMaterijaliLayout.createSequentialGroup()
                                 .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnUcitajSliku)
-                                    .addComponent(btnNoviRed))
-                                .addGap(0, 76, Short.MAX_VALUE))))))
+                                    .addGroup(panelMaterijaliLayout.createSequentialGroup()
+                                        .addComponent(btnNoviRed)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnObrisi)))
+                                .addGap(0, 48, Short.MAX_VALUE))))))
         );
         panelMaterijaliLayout.setVerticalGroup(
             panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -197,31 +244,19 @@ public class MainForm extends javax.swing.JFrame {
                     .addComponent(spinnerLekcija, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 441, Short.MAX_VALUE)
                     .addGroup(panelMaterijaliLayout.createSequentialGroup()
                         .addComponent(lblSlika, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnUcitajSliku)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnNoviRed)))
+                        .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnNoviRed)
+                            .addComponent(btnObrisi))))
                 .addContainerGap())
         );
 
         tpGlavni.addTab("Материјали за час", panelMaterijali);
-
-        menuServis.setText("Сервис");
-
-        menuServisStart.setText("Старт");
-        menuServisStart.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuServisStartActionPerformed(evt);
-            }
-        });
-        menuServis.add(menuServisStart);
-
-        jMenuBar1.add(menuServis);
-
-        setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -243,15 +278,6 @@ public class MainForm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void menuServisStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuServisStartActionPerformed
-        new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
-			}
-		}).start();
-    }//GEN-LAST:event_menuServisStartActionPerformed
-
     private void spinnerRazredStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRazredStateChanged
         osvezi();
     }//GEN-LAST:event_spinnerRazredStateChanged
@@ -271,21 +297,14 @@ public class MainForm extends javax.swing.JFrame {
     private void tblMaterijaliMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMaterijaliMousePressed
         int row = tblMaterijali.rowAtPoint(evt.getPoint());
 		Materijal materijal = materijali.get(row);
-		lblSlika.setIcon(new ImageIcon());
-		try {
-			materijal.ucitajSliku();
-			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
-			Image sSlika = slika.getScaledInstance(lblSlika.getWidth(), lblSlika.getHeight(), Image.SCALE_SMOOTH);
-			lblSlika.setIcon(new ImageIcon(sSlika));
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
+		prikaziSliku(materijal);
     }//GEN-LAST:event_tblMaterijaliMousePressed
 
     private void lblSlikaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblSlikaMouseClicked
         JFrame frmSlika = new JFrame();
 		int row = tblMaterijali.getSelectedRow();
 		Materijal materijal = materijali.get(row);
+		
 		frmSlika.setTitle(String.valueOf(materijal.getId()));
 		try {
 			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
@@ -296,6 +315,46 @@ public class MainForm extends javax.swing.JFrame {
 			ex.printStackTrace();
 		}
     }//GEN-LAST:event_lblSlikaMouseClicked
+
+    private void btnObrisiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnObrisiActionPerformed
+        int row = tblMaterijali.getSelectedRow();
+		if(row >= 0) {
+			Materijal materijal = materijali.get(row);
+			materijalDAO.obrisi(materijal);
+			osvezi();
+		}
+    }//GEN-LAST:event_btnObrisiActionPerformed
+
+    private void btnPokreniActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPokreniActionPerformed
+        new Thread(new Runnable() {
+			@Override
+			public void run() {
+				Endpoint.publish("http://0.0.0.0:5001/Cas", new MaterijalServis());
+			}
+		}).start();
+    }//GEN-LAST:event_btnPokreniActionPerformed
+
+    private void btnUcitajSlikuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUcitajSlikuActionPerformed
+        int row = tblMaterijali.getSelectedRow();
+		if(row < 0)
+			return;
+		Materijal materijal = materijali.get(row);
+		
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Slika", "jpg"));
+		if(fileChooser.showOpenDialog(MainForm.this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				File inFile = fileChooser.getSelectedFile();
+				File outFile = new File("res/materijal/" + materijal.getId() + ".jpg");
+				outFile.delete();
+				outFile.createNewFile();
+				FileUtil.copy(new FileInputStream(inFile), new FileOutputStream(outFile));
+				prikaziSliku(materijal);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+    }//GEN-LAST:event_btnUcitajSlikuActionPerformed
 
 	/**
 	 * @param args the command line arguments
@@ -330,14 +389,13 @@ public class MainForm extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnNoviRed;
+    private javax.swing.JButton btnObrisi;
+    private javax.swing.JButton btnPokreni;
     private javax.swing.JButton btnUcitajSliku;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblLekcija;
     private javax.swing.JLabel lblRazred;
     private javax.swing.JLabel lblSlika;
-    private javax.swing.JMenu menuServis;
-    private javax.swing.JMenuItem menuServisStart;
     private javax.swing.JPanel panelMaterijali;
     private javax.swing.JPanel panelServis;
     private javax.swing.JSpinner spinnerLekcija;

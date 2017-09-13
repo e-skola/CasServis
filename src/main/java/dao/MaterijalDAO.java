@@ -112,7 +112,7 @@ public class MaterijalDAO {
 	}
 	
 	public boolean izmeni(Materijal materijal) {
-		String sql = "UPDATE materijal SET razred=?, lekcija=? WHERE id=?";
+		String sql = "UPDATE materijali SET razred=?, lekcija=? WHERE id=?";
 		
 		try(Connection con = baza.otvoriKonekciju();
 				PreparedStatement stmt = con.prepareStatement(sql)) {
@@ -129,7 +129,7 @@ public class MaterijalDAO {
 	}
 	
 	public boolean obrisi(Materijal materijal) {
-		String sql = "DELETE FROM materijal WHERE id=?";
+		String sql = "DELETE FROM materijali WHERE id=?";
 		
 		try(Connection con = baza.otvoriKonekciju();
 				PreparedStatement stmt = con.prepareStatement(sql)) {
