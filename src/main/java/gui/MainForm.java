@@ -510,8 +510,11 @@ public class MainForm extends javax.swing.JFrame {
         int row = tblMaterijali.getSelectedRow();
 		if(row >= 0) {
 			Materijal materijal = materijali.get(row);
-			materijalDAO.obrisi(materijal);
-			osvezi();
+			if(materijalDAO.obrisi(materijal)) {
+				File slika = new File("res/materijal/" + materijal.getId() + ".jpg");
+				slika.delete();
+				osvezi();
+			}
 		}
     }//GEN-LAST:event_btnObrisiActionPerformed
 
