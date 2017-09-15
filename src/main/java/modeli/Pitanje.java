@@ -15,6 +15,7 @@ public class Pitanje {
 	private int id;
 	private int idKviz;
 	private int tacanOdgovor;
+	private int odgovor;
 	private byte[] slika;
 	
 	public Pitanje() {
@@ -28,6 +29,14 @@ public class Pitanje {
 		this.id = id;
 		this.idKviz = idKviz;
 		this.tacanOdgovor = tacanOdgovor;
+	}
+	
+	public Pitanje(int id, int idKviz, int tacanOdgovor, int odgovor, byte[] slika) {
+		this.id = id;
+		this.idKviz = idKviz;
+		this.tacanOdgovor = tacanOdgovor;
+		this.odgovor = odgovor;
+		this.slika = slika;
 	}
 	
 	public void ucitajSliku() throws IOException {
@@ -56,6 +65,14 @@ public class Pitanje {
 
 	public void setTacanOdgovor(int tacanOdgovor) {
 		this.tacanOdgovor = tacanOdgovor;
+	}
+
+	public int getOdgovor() {
+		return odgovor;
+	}
+
+	public void setOdgovor(int odgovor) {
+		this.odgovor = odgovor;
 	}
 
 	public byte[] getSlika() {

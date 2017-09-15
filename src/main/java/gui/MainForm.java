@@ -1,17 +1,15 @@
 package gui;
 
+import dao.KvizDAO;
 import dao.MaterijalDAO;
+import dao.PitanjeDAO;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -20,7 +18,9 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.ws.Endpoint;
+import modeli.Kviz;
 import modeli.Materijal;
+import modeli.Pitanje;
 import org.eclipse.persistence.tools.file.FileUtil;
 import servisi.CasServis;
 import utils.Konverter;
@@ -33,20 +33,29 @@ import utils.Konverter;
 public class MainForm extends javax.swing.JFrame {
 	
 	private MaterijalDAO materijalDAO;
+	private KvizDAO kvizDAO;
+	private PitanjeDAO pitanjeDAO;
 	private List<Materijal> materijali;
+	private List<Kviz> kvizovi;
+	private List<Pitanje> pitanja;
 	private DefaultTableModel modelMaterijali;
+	private DefaultTableModel modelPitanje;
 	
 	/**
 	 * Creates new form MainForm
 	 */
 	public MainForm() {
 		materijalDAO = new MaterijalDAO();
+		kvizDAO = new KvizDAO();
+		pitanjeDAO = new PitanjeDAO();
+		
 		initModels();
 		initComponents();
 		osvezi();
+		osveziKvizove();
 	}
 	
-	private void osvezi() {
+	public void osvezi() {
 		int razred = (int)spinnerRazred.getValue();
 		int lekcija = (int)spinnerLekcija.getValue();
 		
@@ -67,6 +76,35 @@ public class MainForm extends javax.swing.JFrame {
 		lblSlika.setIcon(new ImageIcon());
 	}
 	
+	public void osveziKvizove() {
+		int selektovaniKviz = cbNazivKviza.getSelectedIndex();
+		if(selektovaniKviz < 0)
+			selektovaniKviz = 0;
+		
+		kvizovi = kvizDAO.preuzmiSve();
+		cbNazivKviza.removeAllItems();
+		for(Kviz kviz : kvizovi) {
+			cbNazivKviza.addItem(kviz.getNaziv());
+		}
+		
+		cbNazivKviza.setSelectedIndex(selektovaniKviz);
+		selektovaniKviz = cbNazivKviza.getSelectedIndex();
+		if(selektovaniKviz >= 0) {
+			pitanja = pitanjeDAO.preuzmi(kvizovi.get(selektovaniKviz));
+			while(modelPitanje.getRowCount() > 0) {
+				modelPitanje.removeRow(0);
+			}
+			for(Pitanje pitanje : pitanja) {
+				modelPitanje.addRow(new Object[] {
+					pitanje.getId(),
+					(char)(pitanje.getTacanOdgovor() - 1 + 'А')
+				});
+			}
+		}
+		
+		lblPitanjeSlika.setIcon(new ImageIcon());
+	}
+	
 	private void initModels() {
 		modelMaterijali = new DefaultTableModel(
 			new Object[][] {},
@@ -74,6 +112,20 @@ public class MainForm extends javax.swing.JFrame {
 				"ИД",
 				"Разред",
 				"Лекција"
+			}
+		) {
+			@Override
+			public boolean isCellEditable(int i, int i1) {
+				return false;
+			}
+			
+		};
+		
+		modelPitanje = new DefaultTableModel(
+			new Object[][] {},
+			new String[] {
+				"ИД",
+				"Тачан одговор"
 			}
 		) {
 			@Override
@@ -91,6 +143,18 @@ public class MainForm extends javax.swing.JFrame {
 			BufferedImage slika = Konverter.byteArrayToImage(materijal.getSlika());
 			Image sSlika = slika.getScaledInstance(lblSlika.getWidth(), lblSlika.getHeight(), Image.SCALE_SMOOTH);
 			lblSlika.setIcon(new ImageIcon(sSlika));
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	public void prikaziSlikuPitanja(Pitanje pitanje) {
+		lblPitanjeSlika.setIcon(new ImageIcon());
+		try {
+			pitanje.ucitajSliku();
+			BufferedImage slika = Konverter.byteArrayToImage(pitanje.getSlika());
+			Image sSlika = slika.getScaledInstance(lblPitanjeSlika.getWidth(), lblPitanjeSlika.getHeight(), Image.SCALE_SMOOTH);
+			lblPitanjeSlika.setIcon(new ImageIcon(sSlika));
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -119,6 +183,17 @@ public class MainForm extends javax.swing.JFrame {
         btnNoviRed = new javax.swing.JButton();
         btnUcitajSliku = new javax.swing.JButton();
         btnObrisi = new javax.swing.JButton();
+        panelKvizovi = new javax.swing.JPanel();
+        lblNazivKviza = new javax.swing.JLabel();
+        cbNazivKviza = new javax.swing.JComboBox<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblPitanja = new javax.swing.JTable();
+        lblPitanjeSlika = new javax.swing.JLabel();
+        btnUcitajSlikuPitanja = new javax.swing.JButton();
+        btnDodajPitanje = new javax.swing.JButton();
+        btnObrisiPitanje = new javax.swing.JButton();
+        btnDodajKviz = new javax.swing.JButton();
+        btnObrisiKviz = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ЧАС");
@@ -223,7 +298,6 @@ public class MainForm extends javax.swing.JFrame {
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 407, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblSlika, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(panelMaterijaliLayout.createSequentialGroup()
                                 .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnUcitajSliku)
@@ -231,7 +305,10 @@ public class MainForm extends javax.swing.JFrame {
                                         .addComponent(btnNoviRed)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(btnObrisi)))
-                                .addGap(0, 48, Short.MAX_VALUE))))))
+                                .addGap(0, 48, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelMaterijaliLayout.createSequentialGroup()
+                                .addComponent(lblSlika, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addContainerGap())))))
         );
         panelMaterijaliLayout.setVerticalGroup(
             panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -257,6 +334,119 @@ public class MainForm extends javax.swing.JFrame {
         );
 
         tpGlavni.addTab("Материјали за час", panelMaterijali);
+
+        lblNazivKviza.setText("Назив квиза:");
+
+        cbNazivKviza.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbNazivKvizaActionPerformed(evt);
+            }
+        });
+
+        tblPitanja.setModel(modelPitanje);
+        tblPitanja.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                tblPitanjaMousePressed(evt);
+            }
+        });
+        jScrollPane2.setViewportView(tblPitanja);
+
+        lblPitanjeSlika.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblPitanjeSlikaMouseClicked(evt);
+            }
+        });
+
+        btnUcitajSlikuPitanja.setText("Учитај слику ...");
+        btnUcitajSlikuPitanja.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUcitajSlikuPitanjaActionPerformed(evt);
+            }
+        });
+
+        btnDodajPitanje.setText("Додај");
+        btnDodajPitanje.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDodajPitanjeActionPerformed(evt);
+            }
+        });
+
+        btnObrisiPitanje.setText("Обриши");
+        btnObrisiPitanje.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnObrisiPitanjeActionPerformed(evt);
+            }
+        });
+
+        btnDodajKviz.setText("Додај квиз");
+        btnDodajKviz.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDodajKvizActionPerformed(evt);
+            }
+        });
+
+        btnObrisiKviz.setText("Обриши квиз");
+        btnObrisiKviz.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnObrisiKvizActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelKvizoviLayout = new javax.swing.GroupLayout(panelKvizovi);
+        panelKvizovi.setLayout(panelKvizoviLayout);
+        panelKvizoviLayout.setHorizontalGroup(
+            panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelKvizoviLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelKvizoviLayout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 401, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblPitanjeSlika, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+                            .addGroup(panelKvizoviLayout.createSequentialGroup()
+                                .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnUcitajSlikuPitanja)
+                                    .addGroup(panelKvizoviLayout.createSequentialGroup()
+                                        .addComponent(btnDodajPitanje)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnObrisiPitanje)))
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(panelKvizoviLayout.createSequentialGroup()
+                        .addComponent(lblNazivKviza)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbNazivKviza, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnDodajKviz)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnObrisiKviz)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        panelKvizoviLayout.setVerticalGroup(
+            panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelKvizoviLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblNazivKviza)
+                    .addComponent(cbNazivKviza, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDodajKviz)
+                    .addComponent(btnObrisiKviz))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
+                    .addGroup(panelKvizoviLayout.createSequentialGroup()
+                        .addComponent(lblPitanjeSlika, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnUcitajSlikuPitanja)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnDodajPitanje)
+                            .addComponent(btnObrisiPitanje))))
+                .addContainerGap())
+        );
+
+        tpGlavni.addTab("Квизови", panelKvizovi);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -356,6 +546,100 @@ public class MainForm extends javax.swing.JFrame {
 		}
     }//GEN-LAST:event_btnUcitajSlikuActionPerformed
 
+    private void lblPitanjeSlikaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblPitanjeSlikaMouseClicked
+        JFrame frmSlika = new JFrame();
+		int row = tblPitanja.getSelectedRow();
+		Pitanje pitanje = pitanja.get(row);
+		
+		frmSlika.setTitle(String.valueOf(pitanje.getId()));
+		try {
+			BufferedImage slika = Konverter.byteArrayToImage(pitanje.getSlika());
+			frmSlika.add(new JLabel(new ImageIcon(slika)));
+			frmSlika.setVisible(true);
+			frmSlika.pack();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+    }//GEN-LAST:event_lblPitanjeSlikaMouseClicked
+
+    private void tblPitanjaMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblPitanjaMousePressed
+        int row = tblPitanja.rowAtPoint(evt.getPoint());
+		Pitanje pitanje = pitanja.get(row);
+		prikaziSlikuPitanja(pitanje);
+    }//GEN-LAST:event_tblPitanjaMousePressed
+
+    private void btnDodajPitanjeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDodajPitanjeActionPerformed
+        int row = cbNazivKviza.getSelectedIndex();
+		if(row < 0)
+			return;
+		
+		int kvizId = kvizovi.get(row).getId();
+		NovoPitanjeDialog dlgNovoPitanje = new NovoPitanjeDialog(this, true, kvizId);
+		dlgNovoPitanje.setVisible(true);
+    }//GEN-LAST:event_btnDodajPitanjeActionPerformed
+
+    private void btnDodajKvizActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDodajKvizActionPerformed
+        NoviKvizDialog dlgNoviKviz = new NoviKvizDialog(this, true);
+		dlgNoviKviz.setVisible(true);
+    }//GEN-LAST:event_btnDodajKvizActionPerformed
+
+    private void cbNazivKvizaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbNazivKvizaActionPerformed
+        osveziKvizove();
+    }//GEN-LAST:event_cbNazivKvizaActionPerformed
+
+    private void btnObrisiKvizActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnObrisiKvizActionPerformed
+        int row = cbNazivKviza.getSelectedIndex();
+		if(row < 0)
+			return;
+		
+		Kviz kviz = kvizovi.get(row);
+		if(kvizDAO.obrisi(kviz)) {
+			List<Pitanje> pitanja = pitanjeDAO.preuzmi(kviz);
+			for(Pitanje pitanje : pitanja) {
+				if(pitanjeDAO.obrisi(pitanje)) {
+					File slika = new File("res/kviz/" + pitanje.getId() + ".jpg");
+					slika.delete();
+				}
+			}
+		}
+		
+		osveziKvizove();
+    }//GEN-LAST:event_btnObrisiKvizActionPerformed
+
+    private void btnUcitajSlikuPitanjaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUcitajSlikuPitanjaActionPerformed
+        int row = tblPitanja.getSelectedRow();
+		if(row < 0)
+			return;
+		Pitanje pitanje = pitanja.get(row);
+		
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Slika", "jpg"));
+		if(fileChooser.showSaveDialog(MainForm.this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				File inFile = fileChooser.getSelectedFile();
+				File outFile = new File("res/kviz/" + pitanje.getId() + ".jpg");
+				outFile.delete();
+				outFile.createNewFile();
+				FileUtil.copy(new FileInputStream(inFile), new FileOutputStream(outFile));
+				prikaziSlikuPitanja(pitanje);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+    }//GEN-LAST:event_btnUcitajSlikuPitanjaActionPerformed
+
+    private void btnObrisiPitanjeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnObrisiPitanjeActionPerformed
+        int row = tblPitanja.getSelectedRow();
+		if(row >= 0) {
+			Pitanje pitanje = pitanja.get(row);
+			if(pitanjeDAO.obrisi(pitanje)) {
+				File slika = new File("res/kviz/" + pitanje.getId() + ".jpg");
+				slika.delete();
+				osveziKvizove();
+			}
+		}
+    }//GEN-LAST:event_btnObrisiPitanjeActionPerformed
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -388,19 +672,30 @@ public class MainForm extends javax.swing.JFrame {
 	}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDodajKviz;
+    private javax.swing.JButton btnDodajPitanje;
     private javax.swing.JButton btnNoviRed;
     private javax.swing.JButton btnObrisi;
+    private javax.swing.JButton btnObrisiKviz;
+    private javax.swing.JButton btnObrisiPitanje;
     private javax.swing.JButton btnPokreni;
     private javax.swing.JButton btnUcitajSliku;
+    private javax.swing.JButton btnUcitajSlikuPitanja;
+    private javax.swing.JComboBox<String> cbNazivKviza;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblLekcija;
+    private javax.swing.JLabel lblNazivKviza;
+    private javax.swing.JLabel lblPitanjeSlika;
     private javax.swing.JLabel lblRazred;
     private javax.swing.JLabel lblSlika;
+    private javax.swing.JPanel panelKvizovi;
     private javax.swing.JPanel panelMaterijali;
     private javax.swing.JPanel panelServis;
     private javax.swing.JSpinner spinnerLekcija;
     private javax.swing.JSpinner spinnerRazred;
     private javax.swing.JTable tblMaterijali;
+    private javax.swing.JTable tblPitanja;
     private javax.swing.JTabbedPane tpGlavni;
     // End of variables declaration//GEN-END:variables
 }

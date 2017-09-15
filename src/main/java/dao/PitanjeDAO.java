@@ -74,7 +74,7 @@ public class PitanjeDAO {
 				PreparedStatement stmt = con.prepareStatement(sql)) {
 			stmt.setInt(1, kviz.getId());
 			
-			ResultSet result = stmt.executeQuery(sql);
+			ResultSet result = stmt.executeQuery();
 			while(result.next()) {
 				Pitanje pitanje = new Pitanje();
 				pitanje.setId(result.getInt("id"));
