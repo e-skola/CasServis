@@ -67,6 +67,28 @@ public class TakmicarDAO {
 		return takmicar;
 	}
 	
+	public List<Takmicar> preuzmiRangListu() {
+		List<Takmicar> takmicari = new ArrayList();
+		String sql = "SELECT id, ime, prezime, bodovi FROM takmicari SORT BY bodovi DESC";
+		
+		try(Connection con = baza.otvoriKonekciju();
+				Statement stmt = con.createStatement()) {
+			ResultSet result = stmt.executeQuery(sql);
+			while(result.next()) {
+				Takmicar takmicar = new Takmicar();
+				takmicar.setId(result.getInt("id"));
+				takmicar.setIme(result.getString("ime"));
+				takmicar.setPrezime(result.getString("prezime"));
+				takmicar.setBodovi(result.getInt("bodovi"));
+				takmicari.add(takmicar);
+			}
+		} catch(SQLException ex) {
+			ex.printStackTrace();
+		}
+		
+		return takmicari;
+	}
+	
 	public boolean dodaj(Takmicar takmicar) {
 		String sql = "INSERT INTO takmicari(ime, prezime, bodovi) VALUES(?, ?, ?)";
 		
