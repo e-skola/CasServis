@@ -3,7 +3,10 @@ package gui;
 import dao.KvizDAO;
 import dao.MaterijalDAO;
 import dao.PitanjeDAO;
+import dao.TakmicarDAO;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,6 +17,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
@@ -21,8 +27,9 @@ import javax.xml.ws.Endpoint;
 import modeli.Kviz;
 import modeli.Materijal;
 import modeli.Pitanje;
+import modeli.Takmicar;
 import org.eclipse.persistence.tools.file.FileUtil;
-import servisi.CasServis;
+import servis.CasServis;
 import utils.Konverter;
 
 /**
@@ -32,19 +39,30 @@ import utils.Konverter;
 
 public class MainForm extends javax.swing.JFrame {
 	
+	private CasServis casServis;
+	
 	private MaterijalDAO materijalDAO;
 	private KvizDAO kvizDAO;
 	private PitanjeDAO pitanjeDAO;
+	private TakmicarDAO takmicarDAO;
+	
 	private List<Materijal> materijali;
 	private List<Kviz> kvizovi;
 	private List<Pitanje> pitanja;
+	private List<Takmicar> rangLista;
+	
 	private DefaultTableModel modelMaterijali;
 	private DefaultTableModel modelPitanje;
+	private DefaultTableModel modelRangLista;
+	
+	Timer tajmerRangLista;
 	
 	/**
 	 * Creates new form MainForm
 	 */
 	public MainForm() {
+		casServis = new CasServis();
+		
 		materijalDAO = new MaterijalDAO();
 		kvizDAO = new KvizDAO();
 		pitanjeDAO = new PitanjeDAO();
@@ -53,6 +71,8 @@ public class MainForm extends javax.swing.JFrame {
 		initComponents();
 		osvezi();
 		osveziKvizove();
+		osveziKviz();
+		podesiTajmere();
 	}
 	
 	public void osvezi() {
@@ -105,6 +125,52 @@ public class MainForm extends javax.swing.JFrame {
 		lblPitanjeSlika.setIcon(new ImageIcon());
 	}
 	
+	public void osveziKviz() {
+		int selektovaniKviz = cbKviz.getSelectedIndex();
+		if(selektovaniKviz < 0)
+			selektovaniKviz = 0;
+		
+		kvizovi = kvizDAO.preuzmiSve();
+		cbKviz.removeAllItems();
+		for(Kviz kviz : kvizovi) {
+			cbKviz.addItem(kviz.getNaziv());
+		}
+		
+		cbKviz.setSelectedIndex(selektovaniKviz);
+		selektovaniKviz = cbKviz.getSelectedIndex();
+	}
+	
+	public void osveziRangListu() {
+		rangLista = casServis.preuzmiRangListu();
+		
+		while(modelRangLista.getRowCount() > 0) {
+			modelRangLista.removeRow(0);
+		}
+		
+		for(Takmicar takmicar : rangLista) {
+			modelRangLista.addRow(new Object[] {
+				takmicar.getIme(),
+				takmicar.getPrezime(),
+				takmicar.getBodovi()
+			});
+		}
+	}
+	
+	private void podesiTajmere() {
+		tajmerRangLista = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						osveziRangListu();
+					}
+				});
+			}
+		});
+		tajmerRangLista.setRepeats(true);
+	}
+	
 	private void initModels() {
 		modelMaterijali = new DefaultTableModel(
 			new Object[][] {},
@@ -126,6 +192,21 @@ public class MainForm extends javax.swing.JFrame {
 			new String[] {
 				"ИД",
 				"Тачан одговор"
+			}
+		) {
+			@Override
+			public boolean isCellEditable(int i, int i1) {
+				return false;
+			}
+			
+		};
+		
+		modelRangLista = new DefaultTableModel(
+			new Object[][] {},
+			new String[] {
+				"Име",
+				"Презиме",
+				"Бодови"
 			}
 		) {
 			@Override
@@ -172,6 +253,13 @@ public class MainForm extends javax.swing.JFrame {
         tpGlavni = new javax.swing.JTabbedPane();
         panelServis = new javax.swing.JPanel();
         btnPokreni = new javax.swing.JButton();
+        panelKviz = new javax.swing.JPanel();
+        cbKviz = new javax.swing.JComboBox<>();
+        lblKviz = new javax.swing.JLabel();
+        btnStartStop = new javax.swing.JButton();
+        lblRangLista = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblRangLista = new javax.swing.JTable();
         panelMaterijali = new javax.swing.JPanel();
         lblRazred = new javax.swing.JLabel();
         spinnerRazred = new javax.swing.JSpinner();
@@ -219,10 +307,60 @@ public class MainForm extends javax.swing.JFrame {
             .addGroup(panelServisLayout.createSequentialGroup()
                 .addGap(117, 117, 117)
                 .addComponent(btnPokreni)
-                .addContainerGap(337, Short.MAX_VALUE))
+                .addContainerGap(352, Short.MAX_VALUE))
         );
 
         tpGlavni.addTab("Сервис", panelServis);
+
+        lblKviz.setText("Квиз:");
+
+        btnStartStop.setText("Започни");
+        btnStartStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnStartStopActionPerformed(evt);
+            }
+        });
+
+        lblRangLista.setText("Ранг листа:");
+
+        tblRangLista.setModel(modelRangLista);
+        jScrollPane3.setViewportView(tblRangLista);
+
+        javax.swing.GroupLayout panelKvizLayout = new javax.swing.GroupLayout(panelKviz);
+        panelKviz.setLayout(panelKvizLayout);
+        panelKvizLayout.setHorizontalGroup(
+            panelKvizLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelKvizLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelKvizLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 621, Short.MAX_VALUE)
+                    .addGroup(panelKvizLayout.createSequentialGroup()
+                        .addGroup(panelKvizLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelKvizLayout.createSequentialGroup()
+                                .addComponent(lblKviz)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbKviz, javax.swing.GroupLayout.PREFERRED_SIZE, 247, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnStartStop))
+                            .addComponent(lblRangLista))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        panelKvizLayout.setVerticalGroup(
+            panelKvizLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelKvizLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelKvizLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cbKviz, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblKviz)
+                    .addComponent(btnStartStop))
+                .addGap(18, 18, 18)
+                .addComponent(lblRangLista)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE))
+        );
+
+        tpGlavni.addTab("Квиз", panelKviz);
 
         lblRazred.setText("Разред:");
 
@@ -321,7 +459,7 @@ public class MainForm extends javax.swing.JFrame {
                     .addComponent(spinnerLekcija, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelMaterijaliLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 441, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 456, Short.MAX_VALUE)
                     .addGroup(panelMaterijaliLayout.createSequentialGroup()
                         .addComponent(lblSlika, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -434,7 +572,7 @@ public class MainForm extends javax.swing.JFrame {
                     .addComponent(btnObrisiKviz))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelKvizoviLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 436, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE)
                     .addGroup(panelKvizoviLayout.createSequentialGroup()
                         .addComponent(lblPitanjeSlika, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -522,7 +660,7 @@ public class MainForm extends javax.swing.JFrame {
         new Thread(new Runnable() {
 			@Override
 			public void run() {
-				Endpoint.publish("http://0.0.0.0:5001/Cas", new CasServis());
+				Endpoint.publish("http://0.0.0.0:5001/Cas", casServis);
 			}
 		}).start();
     }//GEN-LAST:event_btnPokreniActionPerformed
@@ -643,6 +781,25 @@ public class MainForm extends javax.swing.JFrame {
 		}
     }//GEN-LAST:event_btnObrisiPitanjeActionPerformed
 
+    private void btnStartStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStartStopActionPerformed
+        if(!casServis.isKvizPokrenut()) {
+			int row = cbKviz.getSelectedIndex();
+			if(row < 0)
+				return;
+			try {
+				casServis.pokreniKviz(kvizovi.get(row));
+				btnStartStop.setText("Заврши");
+				tajmerRangLista.start();
+			} catch(Exception ex) {
+				JOptionPane.showMessageDialog(null, "Грешка приликом учитавања ресурса квиза");
+			}
+		} else {
+			casServis.zaustaviKviz();
+			btnStartStop.setText("Започни");
+			tajmerRangLista.stop();
+		}
+    }//GEN-LAST:event_btnStartStopActionPerformed
+
 	/**
 	 * @param args the command line arguments
 	 */
@@ -682,16 +839,22 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JButton btnObrisiKviz;
     private javax.swing.JButton btnObrisiPitanje;
     private javax.swing.JButton btnPokreni;
+    private javax.swing.JButton btnStartStop;
     private javax.swing.JButton btnUcitajSliku;
     private javax.swing.JButton btnUcitajSlikuPitanja;
+    private javax.swing.JComboBox<String> cbKviz;
     private javax.swing.JComboBox<String> cbNazivKviza;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JLabel lblKviz;
     private javax.swing.JLabel lblLekcija;
     private javax.swing.JLabel lblNazivKviza;
     private javax.swing.JLabel lblPitanjeSlika;
+    private javax.swing.JLabel lblRangLista;
     private javax.swing.JLabel lblRazred;
     private javax.swing.JLabel lblSlika;
+    private javax.swing.JPanel panelKviz;
     private javax.swing.JPanel panelKvizovi;
     private javax.swing.JPanel panelMaterijali;
     private javax.swing.JPanel panelServis;
@@ -699,6 +862,7 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JSpinner spinnerRazred;
     private javax.swing.JTable tblMaterijali;
     private javax.swing.JTable tblPitanja;
+    private javax.swing.JTable tblRangLista;
     private javax.swing.JTabbedPane tpGlavni;
     // End of variables declaration//GEN-END:variables
 }

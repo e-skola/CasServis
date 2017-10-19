@@ -1,4 +1,4 @@
-package servisi;
+package servis;
 
 import java.util.List;
 import javax.jws.WebMethod;
@@ -25,7 +25,7 @@ public interface ICasServis {
 	public boolean isKvizPokrenut();
 	
 	@WebMethod
-	public boolean prijavaTakmicara(Takmicar takmicar);
+	public Takmicar prijavaTakmicara(Takmicar takmicar);
 	
 	@WebMethod
 	public int preuzmiBrojPitanja();
@@ -34,7 +34,7 @@ public interface ICasServis {
 	public Pitanje preuzmiPitanje(int index);
 	
 	@WebMethod
-	public boolean proveriResenje(Takmicar takmicar, Pitanje pitanje);
+	public Takmicar proveriResenje(Takmicar takmicar, Pitanje pitanje);
 	
 	@WebMethod
 	public List<Takmicar> preuzmiRangListu();

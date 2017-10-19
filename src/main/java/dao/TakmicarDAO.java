@@ -69,7 +69,7 @@ public class TakmicarDAO {
 	
 	public List<Takmicar> preuzmiRangListu() {
 		List<Takmicar> takmicari = new ArrayList();
-		String sql = "SELECT id, ime, prezime, bodovi FROM takmicari SORT BY bodovi DESC";
+		String sql = "SELECT id, ime, prezime, bodovi FROM takmicari ORDER BY bodovi DESC";
 		
 		try(Connection con = baza.otvoriKonekciju();
 				Statement stmt = con.createStatement()) {
@@ -89,7 +89,7 @@ public class TakmicarDAO {
 		return takmicari;
 	}
 	
-	public boolean dodaj(Takmicar takmicar) {
+	public Takmicar dodaj(Takmicar takmicar) {
 		String sql = "INSERT INTO takmicari(ime, prezime, bodovi) VALUES(?, ?, ?)";
 		
 		try(Connection con = baza.otvoriKonekciju();
@@ -106,10 +106,10 @@ public class TakmicarDAO {
 			}
 		} catch(SQLException ex) {
 			ex.printStackTrace();
-			return false;
+			return null;
 		}
 		
-		return true;
+		return takmicar;
 	}
 	
 	public boolean izmeni(Takmicar takmicar) {
@@ -146,7 +146,7 @@ public class TakmicarDAO {
 	}
 	
 	public boolean obrisiSve() {
-		String sql = "DELETE FROM takmicari WHERE";
+		String sql = "DELETE FROM takmicari";
 		
 		try(Connection con = baza.otvoriKonekciju();
 				Statement stmt = con.createStatement()) {

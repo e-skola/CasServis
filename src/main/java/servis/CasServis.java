@@ -1,4 +1,4 @@
-package servisi;
+package servis;
 
 import dao.KvizDAO;
 import dao.MaterijalDAO;
@@ -18,7 +18,7 @@ import modeli.Takmicar;
  * @author zi
  */
 
-@WebService(endpointInterface = "servisi.ICasServis")
+@WebService(endpointInterface = "servis.ICasServis")
 public class CasServis implements ICasServis {
 	
 	private MaterijalDAO materijalDAO;
@@ -70,7 +70,7 @@ public class CasServis implements ICasServis {
 	}
 	
 	@Override
-	public boolean prijavaTakmicara(Takmicar takmicar) {
+	public Takmicar prijavaTakmicara(Takmicar takmicar) {
 		return takmicarDAO.dodaj(takmicar);
 	}
 	
@@ -89,20 +89,17 @@ public class CasServis implements ICasServis {
 	}
 
 	@Override
-	public boolean proveriResenje(Takmicar takmicar, Pitanje pitanje) {
-		if(pitanje.getOdgovor() <= 0)
-			return false;
-		
-		if(pitanje.getOdgovor() == pitanje.getTacanOdgovor()) {
-			takmicar.setBodovi(takmicar.getBodovi() + 10);
-			return true;
-		} else {
-			takmicar.setBodovi(takmicar.getBodovi() - 5);
+	public Takmicar proveriResenje(Takmicar takmicar, Pitanje pitanje) {
+		if(pitanje.getOdgovor() > 0) {
+			if(pitanje.getOdgovor() == pitanje.getTacanOdgovor()) {
+				takmicar.setBodovi(takmicar.getBodovi() + 10);
+			} else {
+				takmicar.setBodovi(takmicar.getBodovi() - 5);
+			}
 		}
-		
 		takmicarDAO.izmeni(takmicar);
 		
-		return false;
+		return takmicar;
 	}
 
 	@Override
@@ -110,9 +107,13 @@ public class CasServis implements ICasServis {
 		return takmicarDAO.preuzmiRangListu();
 	}
 	
-	public void pokreniKviz(Kviz kviz) {
+	public void pokreniKviz(Kviz kviz) throws IOException {
 		this.kviz = kviz;
 		pitanja = pitanjeDAO.preuzmi(kviz);
+		takmicarDAO.obrisiSve();
+		for(Pitanje pitanje : pitanja) {
+			pitanje.ucitajSliku();
+		}
 		kvizPokrenut = true;
 	}
 	
